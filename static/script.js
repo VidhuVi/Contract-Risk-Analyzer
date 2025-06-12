@@ -1,49 +1,64 @@
 document.addEventListener('DOMContentLoaded', () => {
     const analyzeButton = document.getElementById('analyzeButton');
-    const contractText = document.getElementById('contractText');
+    const contractTextarea = document.getElementById('contractText');
     const fileInput = document.getElementById('fileInput');
-    const riskScore = document.getElementById('riskScore');
-    const concernsList = document.getElementById('concernsList');
-    const processedText = document.getElementById('processedText');
+    const riskScoreSpan = document.getElementById('riskScore');
+    const concernsListDiv = document.getElementById('concernsList');
+    const processedTextPre = document.getElementById('processedText');
 
     analyzeButton.addEventListener('click', async () => {
-        let textToAnalyze = contractText.value;
+        let payload;
+        let fetchOptions = {
+            method: 'POST',
+            headers: {}
+        };
 
-        // In a real app, handle file reading here and send text
         if (fileInput.files.length > 0) {
-            alert("File reading not implemented yet. Please paste text directly for now.");
-            return;
-        }
+            const file = fileInput.files[0];
+            payload = new FormData();
+            payload.append('file', file);
+            fetchOptions.body = payload;
 
-        if (!textToAnalyze.trim()) {
+        } else if (contractTextarea.value.trim()) {
+            payload = JSON.stringify({ text: contractTextarea.value.trim() });
+            fetchOptions.headers['Content-Type'] = 'application/json';
+            fetchOptions.body = payload;
+
+        } else {
             alert("Please paste text or select a file to analyze.");
             return;
         }
 
+        // Clear previous results
+        riskScoreSpan.textContent = "Overall Risk Score: Analyzing...";
+        concernsListDiv.innerHTML = "<p>Processing...</p>";
+        processedTextPre.textContent = "Processing...";
+
         try {
-            const response = await fetch('http://127.0.0.1:5000/analyze', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ text: textToAnalyze }),
-            });
+            const response = await fetch('http://127.0.0.1:5000/analyze', fetchOptions);
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
             }
 
             const result = await response.json();
-            console.log(result); // Log the result for now
+            console.log('Analysis Result:', result);
 
-            // Update results display (placeholder for now)
-            riskScore.textContent = "Overall Risk Score: Placeholder";
-            concernsList.innerHTML = "<p>Analysis complete (details to follow).</p>";
-            processedText.textContent = textToAnalyze; // Display original text for now
+            riskScoreSpan.textContent = `Overall Risk Score: (Placeholder - based on ${result.num_tokens} tokens, ${result.num_sentences} sentences)`;
+            concernsListDiv.innerHTML = `
+                <p>Document processed by SpaCy.</p>
+                <p>Number of sentences: ${result.num_sentences}</p>
+                <p>Number of tokens: ${result.num_tokens}</p>
+            `;
+            processedTextPre.textContent = result.original_text;
 
         } catch (error) {
             console.error('Error during analysis:', error);
-            alert('Analysis failed. Check console for details.');
+            riskScoreSpan.textContent = "Overall Risk Score: Error";
+            concernsListDiv.innerHTML = `<p style="color: red;">Analysis failed: ${error.message}</p>`;
+            processedTextPre.textContent = "";
+            alert(`Analysis failed. See console for details: ${error.message}`);
         }
     });
 });
