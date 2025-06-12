@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contract Analyzer MVP</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Contract & T&C Risk Analyzer</h1>
+    <div class="container">
+      <textarea
+        id="contractText"
+        placeholder="Paste your contract text here..."
+        rows="15"
+        cols="80"
+      ></textarea>
+      <br />
+      <input type="file" id="fileInput" accept=".txt,.docx,.pdf" />
+      <button id="analyzeButton">Analyze Document</button>
+    </div>
+    <div id="results">
+      <h2>Analysis Results:</h2>
+      <p id="riskScore">Overall Risk Score: N/A</p>
+      <div id="concernsList"></div>
+      <h3>Processed Text:</h3>
+      <pre id="processedText"></pre>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
